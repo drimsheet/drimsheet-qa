@@ -1,0 +1,24 @@
+{
+  "name": "drimsheet-qa",
+  "version": "1.0.0",
+  "description": "Playwright smoke and end-to-end tests for the Drimsheet QA environment",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "npm run test:e2e",
+    "test:config": "node --experimental-strip-types --test config/environment.test.ts",
+    "test:e2e": "playwright test --grep @e2e",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:a11y": "playwright test --grep @a11y",
+    "test:e2e:ui": "playwright test --grep @e2e --ui",
+    "test:e2e:headed": "playwright test --grep @e2e --headed",
+    "test:e2e:report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@types/node": "22.20.1",
+    "dotenv": "17.4.2",
+    "typescript": "7.0.2"
+  }
+}
