@@ -30,6 +30,15 @@ const accountingEntityCases = [
   },
 ] as const;
 
+async function signIn(page: Page, userEmail: string) {
+  await page.goto("/auth/signin");
+  await page.getByLabel("Email").fill(userEmail);
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Sign In" }).click();
+
+  await expect(page).toHaveURL("/dashboard");
+}
+
 async function completeAccountingEntityForm({
   page,
   accountOption,
@@ -90,12 +99,7 @@ test.describe("accounting entity creation", () => {
           lastName: "Automation",
         });
 
-        await page.goto("/auth/signin");
-        await page.getByLabel("Email").fill(userEmail);
-        await page.getByLabel("Password", { exact: true }).fill(password);
-        await page.getByRole("button", { name: "Sign In" }).click();
-
-        await expect(page).toHaveURL("/dashboard");
+        await signIn(page, userEmail);
         const onboardingDialog = page.getByRole("dialog", {
           name: "Account setup",
         });
@@ -126,4 +130,108 @@ test.describe("accounting entity creation", () => {
       },
     );
   }
+});
+
+test.describe("accounting entity switching", () => {
+  test.describe.configure({ mode: "serial" });
+
+  const runId = randomUUID().replaceAll("-", "").slice(0, 16);
+  const userEmail = getEmail(["smoke", "acct", "switch", runId]);
+  const individualEntityName = "QA Automation";
+  const companyEntityName = `QA Switch Company ${runId}`;
+
+  test.beforeAll(async () => {
+    await drimsheetApi.auth.signupWithEmail({
+      email: userEmail,
+      password,
+      firstName: "QA",
+      lastName: "Automation",
+    });
+  });
+
+  test(
+    "user can create accounting entities for switching",
+    { tag: [TAGS.E2E, TAGS.SMOKE] },
+    async ({ page }) => {
+      await signIn(page, userEmail);
+
+      const onboardingDialog = page.getByRole("dialog", {
+        name: "Account setup",
+      });
+      await expect(onboardingDialog).toBeVisible();
+
+      await completeAccountingEntityForm({
+        page,
+        accountOption: "An Individual",
+        entityName: individualEntityName,
+        isProfileDerivedName: true,
+      });
+
+      await expect(onboardingDialog).not.toBeVisible();
+      await page
+        .getByRole("button", {
+          name: `Open account management for ${individualEntityName}`,
+        })
+        .click();
+
+      const accountManagementDialog = page.getByRole("dialog", {
+        name: "Account management",
+      });
+      await expect(accountManagementDialog).toBeVisible();
+      await accountManagementDialog
+        .getByRole("button", { name: "Add a new account" })
+        .click();
+
+      await expect(onboardingDialog).toBeVisible();
+      await completeAccountingEntityForm({
+        page,
+        accountOption: "A Company",
+        entityName: companyEntityName,
+        isProfileDerivedName: false,
+      });
+
+      await expect(onboardingDialog).not.toBeVisible();
+      await expect(
+        page.getByRole("button", {
+          name: `Open account management for ${companyEntityName}`,
+        }),
+      ).toBeVisible();
+    },
+  );
+
+  test(
+    "user can switch between accounting entities",
+    { tag: [TAGS.E2E, TAGS.SMOKE] },
+    async ({ page }) => {
+      await signIn(page, userEmail);
+
+      const companyAccountManagementTrigger = page.getByRole("button", {
+        name: `Open account management for ${companyEntityName}`,
+      });
+      await expect(companyAccountManagementTrigger).toBeVisible();
+      await companyAccountManagementTrigger.click();
+
+      let accountManagementDialog = page.getByRole("dialog", {
+        name: "Account management",
+      });
+      await accountManagementDialog
+        .getByRole("button", { name: `Switch to ${individualEntityName}` })
+        .click();
+
+      const individualAccountManagementTrigger = page.getByRole("button", {
+        name: `Open account management for ${individualEntityName}`,
+      });
+      await expect(individualAccountManagementTrigger).toBeVisible();
+      await individualAccountManagementTrigger.click();
+
+      accountManagementDialog = page.getByRole("dialog", {
+        name: "Account management",
+      });
+      await accountManagementDialog
+        .getByRole("button", { name: `Switch to ${companyEntityName}` })
+        .click();
+
+      await expect(companyAccountManagementTrigger).toBeVisible();
+    },
+  );
 });
