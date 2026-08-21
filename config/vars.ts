@@ -5,6 +5,8 @@ config({ quiet: true });
 export const {
   APP_URL,
 
+  CORE_URL,
+
   ZOHO_MAIL_CLIENT_ID,
   ZOHO_MAIL_CLIENT_SECRET,
   ZOHO_MAIL_REFRESH_TOKEN,
