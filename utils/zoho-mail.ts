@@ -7,7 +7,7 @@ import {
   ZOHO_MAIL_CLIENT_ID,
   ZOHO_MAIL_CLIENT_SECRET,
   ZOHO_MAIL_REFRESH_TOKEN,
-} from "../../config/vars.ts";
+} from "../config/vars.ts";
 import { EZohoMailboxFolderName } from "../types/zoho-mail.types.ts";
 import type {
   IGetEmailContentParams,
@@ -286,6 +286,12 @@ export async function getMailbox(
   return response.data.data;
 }
 
+export function getNoMatchingZohoMessageErrorMessage(
+  folderName: UZohoMailboxFolderName,
+): string {
+  return `No Zoho ${folderName} message matched the supplied criteria.`;
+}
+
 /**
  * Finds the newest message in the selected folder matching the supplied
  * criteria and returns its HTML content and folder ID.
@@ -344,14 +350,12 @@ export async function getEmailContent(params: IGetEmailContentParams) {
   });
 
   if (!message) {
-    throw new Error(
-      `No Zoho ${folderName} message matched the supplied criteria.`,
-    );
+    throw new Error(getNoMatchingZohoMessageErrorMessage(folderName));
   }
 
   const accountId = required("ZOHO_MAIL_ACCOUNT_ID", ZOHO_MAIL_ACCOUNT_ID);
   const response = await zohoMailApi.get<
-    IZohoApiResponse<Omit<IZohoMailMessageContent, "folderId">>
+    IZohoApiResponse<{ messageId: number; content: string }>
   >(
     `/api/accounts/${encodeURIComponent(accountId)}/folders/${encodeURIComponent(message.folderId)}/messages/${encodeURIComponent(message.messageId)}/content`,
     {
@@ -368,9 +372,28 @@ export async function getEmailContent(params: IGetEmailContentParams) {
   }
 
   return {
-    ...response.data.data,
+    content: response.data.data.content,
+    messageId: message.messageId,
     folderId: message.folderId,
   };
+}
+
+export async function getEmailContentIfAvailable(
+  params: IGetEmailContentParams,
+): Promise<IZohoMailMessageContent | undefined> {
+  try {
+    return await getEmailContent(params);
+  } catch (error) {
+    const noMatchingMessageError = getNoMatchingZohoMessageErrorMessage(
+      params.folderName,
+    );
+
+    if (error instanceof Error && error.message === noMatchingMessageError) {
+      return undefined;
+    }
+
+    throw error;
+  }
 }
 
 /**

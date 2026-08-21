@@ -1,5 +1,3 @@
-import { getMailbox } from "../support/zoho-mail.ts";
-
 export interface IZohoAccessTokenResponse {
   access_token: string;
   expires_in: number;

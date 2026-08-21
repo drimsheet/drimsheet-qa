@@ -1,6 +1,6 @@
 # Drimsheet QA contributor guidance
 
-This is an npm-only Playwright repository. Run browser tests only against the separately deployed, exact-host-allowlisted Drimsheet QA environment; never target production and never add a routine guard bypass.
+This is an npm-only Playwright repository. Run browser tests only against environments whose exact hostname is committed to the Drimsheet allowlist; never target production and never let runtime input expand the allowlist.
 
 Before changing coverage:
 
