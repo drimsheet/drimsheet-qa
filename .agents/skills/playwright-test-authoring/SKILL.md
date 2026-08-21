@@ -1,6 +1,6 @@
 ---
 name: playwright-test-authoring
-description: Create or change Playwright smoke, end-to-end, or accessibility coverage in the Drimsheet QA repository against its approved live QA environment.
+description: Create or change Playwright smoke, end-to-end, or accessibility coverage in the Drimsheet QA repository against an exact-host-allowlisted environment.
 ---
 
 # Playwright Test Authoring
@@ -16,4 +16,4 @@ description: Create or change Playwright smoke, end-to-end, or accessibility cov
 7. Run the focused Playwright command and `npm run typecheck`. Run `npm run test:config` when changing the environment boundary.
 8. Report which checks ran and which live checks remain blocked by URL, credentials, data, deployment, or browser availability.
 
-Use npm only. Playwright does not launch Drimsheet locally. Do not introduce production overrides, arbitrary sleeps, broad retries, speculative frameworks, or raw tag literals in test code.
+Use npm only. Playwright does not start the target application; an allowlisted localhost target must already be running. Do not introduce production overrides, arbitrary sleeps, broad retries, speculative frameworks, or raw tag literals in test code.

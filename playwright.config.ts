@@ -7,7 +7,6 @@ import { requireAppUrl } from './config/environment.js';
 const isCI = Boolean(process.env.CI);
 
 export default defineConfig({
-  testDir: './tests',
   outputDir: 'test-results',
   fullyParallel: true,
   forbidOnly: true,
@@ -28,7 +27,13 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'chromium',
+      name: 'e2e',
+      testDir: './tests/e2e',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'smoke',
+      testDir: './tests/smoke',
       use: { ...devices['Desktop Chrome'] },
     },
   ],
