@@ -7,6 +7,7 @@
   "scripts": {
     "test": "npm run test:e2e",
     "test:config": "node --experimental-strip-types --test config/environment.test.ts",
+    "api:gen": "node scripts/api-gen.js && node scripts/convert-enums.js",
     "test:e2e": "playwright test --project=e2e",
     "test:smoke": "playwright test --project=smoke",
     "test:a11y": "playwright test --grep @a11y",
@@ -20,6 +21,7 @@
     "@types/node": "22.20.1",
     "cheerio": "^1.2.0",
     "dotenv": "^17.4.2",
+    "swagger-typescript-api": "^13.12.6",
     "typescript": "7.0.2"
   },
   "dependencies": {
