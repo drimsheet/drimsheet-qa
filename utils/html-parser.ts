@@ -2,49 +2,76 @@ import { load } from "cheerio";
 import { APP_URL } from "../config/vars.ts";
 
 export function extractVerificationUrl(content: string): URL {
+  return extractAuthActionUrl(content, {
+    linkText: "Verify email",
+    linkDescription: "verification",
+    expectedPathname: "/auth/signup/complete",
+  });
+}
+
+export function extractPasswordResetUrl(content: string): URL {
+  return extractAuthActionUrl(content, {
+    linkText: "Reset password",
+    linkDescription: "password reset",
+    expectedPathname: "/auth/reset-password",
+  });
+}
+
+function extractAuthActionUrl(
+  content: string,
+  options: {
+    linkText: string;
+    linkDescription: string;
+    expectedPathname: string;
+  },
+): URL {
+  const { linkText, linkDescription, expectedPathname } = options;
+
   if (!APP_URL) {
-    throw new Error("APP_URL is required to validate the verification link.");
+    throw new Error(
+      `APP_URL is required to validate the ${linkDescription} link.`,
+    );
   }
 
   const $ = load(content);
-  const verificationLinks = $("a").filter((_, element) => {
+  const actionLinks = $("a").filter((_, element) => {
     const normalizedText = $(element).text().replace(/\s+/g, " ").trim();
 
-    return normalizedText === "Verify email";
+    return normalizedText === linkText;
   });
 
-  if (verificationLinks.length !== 1) {
+  if (actionLinks.length !== 1) {
     throw new Error(
-      `Expected exactly one Verify email link, found ${verificationLinks.length}.`,
+      `Expected exactly one ${linkText} link, found ${actionLinks.length}.`,
     );
   }
 
-  const href = verificationLinks.first().attr("href")?.trim();
+  const href = actionLinks.first().attr("href")?.trim();
 
   if (!href) {
-    throw new Error("The Verify email link does not have an href.");
+    throw new Error(`The ${linkText} link does not have an href.`);
   }
 
   const appUrl = new URL(APP_URL);
-  const verificationUrl = new URL(href, appUrl);
+  const actionUrl = new URL(href, appUrl);
 
   if (
-    verificationUrl.origin !== appUrl.origin ||
-    verificationUrl.username ||
-    verificationUrl.password
+    actionUrl.origin !== appUrl.origin ||
+    actionUrl.username ||
+    actionUrl.password
   ) {
     throw new Error(
-      "The verification link does not use the approved QA origin.",
+      `The ${linkDescription} link does not use the approved QA origin.`,
     );
   }
 
-  if (verificationUrl.pathname !== "/auth/signup/complete") {
-    throw new Error("The verification link has an unexpected path.");
+  if (actionUrl.pathname !== expectedPathname) {
+    throw new Error(`The ${linkDescription} link has an unexpected path.`);
   }
 
-  if (!verificationUrl.searchParams.get("token")?.trim()) {
-    throw new Error("The verification link does not include a token.");
+  if (!actionUrl.searchParams.get("token")?.trim()) {
+    throw new Error(`The ${linkDescription} link does not include a token.`);
   }
 
-  return verificationUrl;
+  return actionUrl;
 }
