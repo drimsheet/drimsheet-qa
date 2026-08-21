@@ -48,6 +48,21 @@ needs require the boundary now.
 Prefer a concrete Playwright flow or local helper until repeated current usage
 demonstrates a reusable capability.
 
+## TypeScript Type Taxonomy
+
+Prefix every named TypeScript type declaration according to its declaration
+kind:
+
+- `T` for non-union type aliases, for example `TZohoMailAccountId`;
+- `I` for interfaces, for example `IZohoMailAccount`;
+- `U` for union type aliases, for example `UZohoMailAccountType`; and
+- `E` for enums, for example `EZohoMailAccountStatus`.
+
+The taxonomy applies to named declarations. It does not require prefixes for
+generic type parameters or inline type annotations. Keep an existing compliant
+prefix when moving a declaration between files, and update all imports and
+references when changing a declaration kind or name.
+
 ## Test Data And Fixture Gate
 
 Do not introduce generic fixtures, seeders, factories, account pools, or test

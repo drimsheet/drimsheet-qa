@@ -20,6 +20,34 @@ Set `APP_URL` in `.env` to the separately deployed QA URL. Before any browser ru
 
 Credentials belong only in local `.env` files or protected CI secrets. Add credential variables to `.env.example` only when a confirmed scenario consumes them, and never print their values.
 
+## Zoho QA mailbox helper
+
+`tests/support/zoho-mail.ts` reads messages from the dedicated QA mailbox. The
+QA team owns its mailbox identity and OAuth configuration. It requires the six
+`ZOHO_MAIL_*` variables documented in `.env.example`; none has a default.
+`ZOHO_MAIL_CLIENT_SECRET` and `ZOHO_MAIL_REFRESH_TOKEN` are secrets.
+
+It scans the newest 200 Inbox messages, applies the requested filters, and
+fetches the HTML content for up to `limit` matches.
+
+```ts
+import { fetchZohoInboxMessages } from '../support/zoho-mail.js';
+
+const messages = await fetchZohoInboxMessages({
+  subject: 'QA-E2E-abc123',
+  sentAfter: testStartedAt,
+  fromAddress: 'no-reply@example.com',
+  limit: 1,
+});
+
+const [message] = messages;
+```
+
+`subject` is a case-insensitive substring match. `fromAddress` is an exact,
+case-insensitive match; `toAddress` is a case-insensitive substring match.
+`sentAfter` and `sentBefore` accept `Date` objects or Unix timestamps in
+milliseconds. The optional `status` is `all`, `read`, or `unread`.
+
 ## Commands
 
 ```bash
